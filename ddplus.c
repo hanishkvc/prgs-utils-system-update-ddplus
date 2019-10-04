@@ -6,6 +6,7 @@
 #include <strings.h>
 #include <string.h>
 #include <dirent.h>
+#include <stdbool.h>
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -74,7 +75,56 @@ int list_dir(char *sDirPath, char *sPrefix, AOFSTR saFiles) {
 }
 
 
+int find_srcdst(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel) {
+
+	AOFSTR saFiles;
+	int iFiles = list_dir("/sys/block", "sd", saFiles);
+	if (iFiles <= 0) {
+		fprintf(stderr, "ERRR:ddplus:find_sd: No Disks\n");
+		return -1;
+	}
+
+	// Find Source Disk
+	bool bSrcDisk = false;
+	for(int i = 0; i < iFiles; i++) {
+		if (finddisk_frommodel(saFiles[i], sSrcModel) < 0) {
+			continue;
+		}
+		strncpy(sSrcDisk, saFiles[i], STRING_LEN);
+		bSrcDisk = true;
+		break;
+	}
+	if (bSrcDisk) {
+		fprintf(stderr, "INFO:ddplus:find_sd:Source[%s]\n", sSrcDisk);
+	} else {
+		fprintf(stderr, "ERRR:ddplus:find_sd:NO Source\n");
+		return -1;
+	}
+
+	// Find Dest Disk
+	bool bDstDisk = false;
+	for(int i = 0; i < iFiles; i++) {
+		if (finddisk_frommodel(saFiles[i], sDstModel) < 0) {
+			continue;
+		}
+		strncpy(sDstDisk, saFiles[i], STRING_LEN);
+		bDstDisk = true;
+		break;
+	}
+	if (bDstDisk) {
+		fprintf(stderr, "INFO:ddplus:find_sd:Dest[%s]\n", sDstDisk);
+	} else {
+		fprintf(stderr, "ERRR:ddplus:find_sd:NO Dest\n");
+		return -2;
+	}
+
+	return 0;
+}
+
+
 int main(int argc, char **argv) {
+
+	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
 
 	if (argc < 3) {
 		fprintf(stderr,"INFO:usage: ddplus <SrcModel> <DestModel>\n");
@@ -82,13 +132,8 @@ int main(int argc, char **argv) {
 	}
 	gsSrcModel = argv[1];
 	gsDstModel = argv[2];
-	finddisk_frommodel("sda", gsSrcModel);
-	finddisk_frommodel("sdb", gsSrcModel);
-	finddisk_frommodel("sda", gsDstModel);
-	finddisk_frommodel("sdb", gsDstModel);
 
-	AOFSTR saFiles;
-	list_dir("/sys/block", "sd", saFiles);
+	find_srcdst(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel);
 
 	return 0;
 }
