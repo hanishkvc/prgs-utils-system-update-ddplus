@@ -15,6 +15,11 @@
 
 char *gsSrcModel, *gsDstModel;
 
+#define MAX_STRINGS 128
+#define STRING_LEN 512
+//typedef char TMYSTRING[MAX_STRINGS][STRING_LEN] AOfSTR;
+typedef char AOFSTR[MAX_STRINGS][STRING_LEN];
+
 
 int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
@@ -47,8 +52,9 @@ cleanup:
 }
 
 
-int list_dir(char *sDirPath, char *sPrefix) {
+int list_dir(char *sDirPath, char *sPrefix, AOFSTR saFiles) {
 	DIR *rDir = opendir(sDirPath);
+	int iCur = 0;
 	if (rDir == NULL) {
 		fprintf(stderr, "ERRR:ld:%s:dirpath?\n", sDirPath);
 		return -1;
@@ -59,9 +65,12 @@ int list_dir(char *sDirPath, char *sPrefix) {
 			break;
 		if (strncmp(de->d_name, sPrefix, strlen(sPrefix)) != 0)
 			continue;
-		fprintf(stderr, "DBUG:ld:%s\n", de->d_name);
+		strncpy(saFiles[iCur], de->d_name, STRING_LEN);
+		fprintf(stderr, "DBUG:ld:%s\n", saFiles[iCur]);
+		iCur++;
 	}
 	closedir(rDir);
+	return iCur;
 }
 
 
@@ -78,7 +87,8 @@ int main(int argc, char **argv) {
 	finddisk_frommodel("sda", gsDstModel);
 	finddisk_frommodel("sdb", gsDstModel);
 
-	list_dir("/sys/block", "sd");
+	AOFSTR saFiles;
+	list_dir("/sys/block", "sd", saFiles);
 
 	return 0;
 }
