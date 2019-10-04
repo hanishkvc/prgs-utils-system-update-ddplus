@@ -12,6 +12,8 @@
 #define FINDDISK_BASE "/sys/block"
 #define FINDDISK_FILE "device/model"
 
+char *gsSrcModel, *gsDstModel;
+
 int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
 	char sData[TEMP_BUFLEN];
@@ -42,6 +44,17 @@ cleanup:
 
 
 int main(int argc, char **argv) {
+
+	if (argc < 3) {
+		fprintf(stderr,"INFO:usage: ddplus <SrcModel> <DestModel>\n");
+		return 1;
+	}
+	gsSrcModel = argv[1];
+	gsDstModel = argv[2];
+	finddisk_frommodel("sda", gsSrcModel);
+	finddisk_frommodel("sdb", gsSrcModel);
+	finddisk_frommodel("sda", gsDstModel);
+	finddisk_frommodel("sdb", gsDstModel);
 
 	return 0;
 }
