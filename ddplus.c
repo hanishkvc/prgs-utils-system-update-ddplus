@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -17,7 +18,7 @@
 
 char *gsDevPath;
 char *gsSrcModel, *gsDstModel;
-int giSrcOffset, giDstOffset;
+long long int giSrcOffset, giDstOffset, giTransSize;
 
 #define MAX_STRINGS 128
 #define STRING_LEN 512
@@ -131,7 +132,7 @@ int find_srcdst(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel
 }
 
 
-int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long int iSrcOffset, long int iDstOffset) {
+int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
 	snprintf(sSrcPath, PATH_LEN, "%s/%s", sDevPath, sSrcDisk);
@@ -148,14 +149,35 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long int iSrcOffset, 
 		return -2;
 	}
 
-	if (lseek(iFSrc, iSrcOffset, SEEK_SET) != -1) {
-		fprintf(stderr, "ERRR:dd: Failed Src [%s] seekto [%ld]\n", sSrcPath, iSrcOffset);
+	if (lseek(iFSrc, iSrcOffset, SEEK_SET) == -1) {
+		fprintf(stderr, "ERRR:dd: Failed Src [%s] seekto [%lld];[%s]\n", sSrcPath, iSrcOffset, strerror(errno));
 		return -11;
 	}
-	if (lseek(iFDst, iDstOffset, SEEK_SET) != -1) {
-		fprintf(stderr, "ERRR:dd: Failed Dst [%s] seekto [%ld]\n", sDstPath, iDstOffset);
-		return -11;
+	fprintf(stderr, "INFO:dd: Src [%s] seekdto [%lld]\n", sSrcPath, iSrcOffset);
+	if (lseek(iFDst, iDstOffset, SEEK_SET) == -1) {
+		fprintf(stderr, "ERRR:dd: Failed Dst [%s] seekto [%lld]\n", sDstPath, iDstOffset);
+		return -12;
 	}
+	fprintf(stderr, "INFO:dd: Dst [%s] seekdto [%lld]\n", sDstPath, iDstOffset);
+
+	int iLen = 0x100000;
+	char sData[iLen];
+	while (iTransferSize > 0) {
+		if (iLen > iTransferSize)
+			iLen = iTransferSize;
+		int iRead = read(iFSrc, sData, iLen);
+		if (iRead != iLen) {
+			fprintf(stderr, "ERRR:dd: Failed to read\n");
+			return -21;
+		}
+		int iWrite = write(iFDst, sData, iRead);
+		if (iWrite != iRead) {
+			fprintf(stderr, "ERRR:dd: Failed to write\n");
+			return -22;
+		}
+		iTransferSize -= iLen;
+	}
+
 	return 0;
 }
 
@@ -164,8 +186,8 @@ int main(int argc, char **argv) {
 
 	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
 
-	if (argc < 6) {
-		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset>\n");
+	if (argc < 7) {
+		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize>\n");
 		return 1;
 	}
 	gsDevPath = argv[1];
@@ -173,14 +195,20 @@ int main(int argc, char **argv) {
 	gsDstModel = argv[3];
 	giSrcOffset = strtoll(argv[4], NULL, 0);
 	giDstOffset = strtoll(argv[5], NULL, 0);
+	giTransSize = strtoll(argv[6], NULL, 0);
 
 
 	if (find_srcdst(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel) != 0) {
-		fprintf(stderr,"INFO:ddplus: Failed to find Source or Dest Disk, quiting...\n");
+		fprintf(stderr,"ERRR:ddplus: Failed to find Source or Dest Disk, quiting...\n");
 		return 2;
 	}
 
-	dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset);
+	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize) != 0) {
+		fprintf(stderr,"ERRR:ddplus: Failed to update, quiting...\n");
+		return 3;
+	} else {
+		fprintf(stderr,"INFO:ddplus: Done with update, quiting...\n");
+	}
 
 	return 0;
 }
