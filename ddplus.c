@@ -162,7 +162,11 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 
 	int iLen = 0x100000;
 	char sData[iLen];
+	int iProgress = 0;
 	while (iTransferSize > 0) {
+		if ((iProgress % 1024) == 0) {
+			fprintf(stderr, "INFO:dd: Remaining [%lld]...\n", iTransferSize);
+		}
 		if (iLen > iTransferSize)
 			iLen = iTransferSize;
 		int iRead = read(iFSrc, sData, iLen);
@@ -176,6 +180,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			return -22;
 		}
 		iTransferSize -= iLen;
+		iProgress += 1;
 	}
 
 	return 0;
