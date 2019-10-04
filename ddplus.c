@@ -57,6 +57,8 @@ int list_dir(char *sDirPath, char *sPrefix) {
 		struct dirent *de = readdir(rDir);
 		if (de == NULL)
 			break;
+		if (strncmp(de->d_name, sPrefix, strlen(sPrefix)) != 0)
+			continue;
 		fprintf(stderr, "DBUG:ld:%s\n", de->d_name);
 	}
 	closedir(rDir);
