@@ -7,6 +7,7 @@
 #include <string.h>
 #include <dirent.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -15,6 +16,7 @@
 #define FINDDISK_FILE "device/model"
 
 char *gsSrcModel, *gsDstModel;
+int giSrcOffset, giDstOffset;
 
 #define MAX_STRINGS 128
 #define STRING_LEN 512
@@ -128,18 +130,55 @@ int find_srcdst(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel
 }
 
 
+int dd_s2d(char *sSrcDisk, char *sDstDisk, long int iSrcOffset, long int iDstOffset) {
+	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
+
+	snprintf(sSrcPath, PATH_LEN, "/dev/block/%s", sSrcDisk);
+	snprintf(sDstPath, PATH_LEN, "/dev/block/%s", sDstDisk);
+
+	int iFSrc = open(sSrcPath, O_RDONLY);
+	if (iFSrc == -1) {
+		fprintf(stderr, "ERRR:dd: Failed to open Src [%s]\n", sSrcPath);
+		return -1;
+	}
+	int iFDst = open(sDstPath, O_RDWR);
+	if (iFDst == -1) {
+		fprintf(stderr, "ERRR:dd: Failed to open Dst [%s]\n", sDstPath);
+		return -2;
+	}
+
+	if (lseek(iFSrc, iSrcOffset, SEEK_SET) != -1) {
+		fprintf(stderr, "ERRR:dd: Failed Src [%s] seekto [%ld]\n", sSrcPath, iSrcOffset);
+		return -11;
+	}
+	if (lseek(iFDst, iDstOffset, SEEK_SET) != -1) {
+		fprintf(stderr, "ERRR:dd: Failed Dst [%s] seekto [%ld]\n", sDstPath, iDstOffset);
+		return -11;
+	}
+	return 0;
+}
+
+
 int main(int argc, char **argv) {
 
 	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
 
-	if (argc < 3) {
-		fprintf(stderr,"INFO:usage: ddplus <SrcModel> <DestModel>\n");
+	if (argc < 5) {
+		fprintf(stderr,"INFO:usage: ddplus <SrcModel> <DestModel> <SrcOffset> <DstOffset>\n");
 		return 1;
 	}
 	gsSrcModel = argv[1];
 	gsDstModel = argv[2];
+	giSrcOffset = strtoll(argv[3], NULL, 0);
+	giDstOffset = strtoll(argv[4], NULL, 0);
 
-	find_srcdst(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel);
+
+	if (find_srcdst(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel) != 0) {
+		fprintf(stderr,"INFO:ddplus: Failed to find Source or Dest Disk, quiting...\n");
+		return 2;
+	}
+
+	dd_s2d(sSrcDisk, sDstDisk, giSrcOffset, giDstOffset);
 
 	return 0;
 }
