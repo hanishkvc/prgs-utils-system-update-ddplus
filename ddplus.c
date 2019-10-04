@@ -15,6 +15,7 @@
 #define FINDDISK_BASE "/sys/block"
 #define FINDDISK_FILE "device/model"
 
+char *gsDevPath;
 char *gsSrcModel, *gsDstModel;
 int giSrcOffset, giDstOffset;
 
@@ -130,11 +131,11 @@ int find_srcdst(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel
 }
 
 
-int dd_s2d(char *sSrcDisk, char *sDstDisk, long int iSrcOffset, long int iDstOffset) {
+int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long int iSrcOffset, long int iDstOffset) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
-	snprintf(sSrcPath, PATH_LEN, "/dev/block/%s", sSrcDisk);
-	snprintf(sDstPath, PATH_LEN, "/dev/block/%s", sDstDisk);
+	snprintf(sSrcPath, PATH_LEN, "%s/%s", sDevPath, sSrcDisk);
+	snprintf(sDstPath, PATH_LEN, "%s/%s", sDevPath, sDstDisk);
 
 	int iFSrc = open(sSrcPath, O_RDONLY);
 	if (iFSrc == -1) {
@@ -163,14 +164,15 @@ int main(int argc, char **argv) {
 
 	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
 
-	if (argc < 5) {
-		fprintf(stderr,"INFO:usage: ddplus <SrcModel> <DestModel> <SrcOffset> <DstOffset>\n");
+	if (argc < 6) {
+		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset>\n");
 		return 1;
 	}
-	gsSrcModel = argv[1];
-	gsDstModel = argv[2];
-	giSrcOffset = strtoll(argv[3], NULL, 0);
-	giDstOffset = strtoll(argv[4], NULL, 0);
+	gsDevPath = argv[1];
+	gsSrcModel = argv[2];
+	gsDstModel = argv[3];
+	giSrcOffset = strtoll(argv[4], NULL, 0);
+	giDstOffset = strtoll(argv[5], NULL, 0);
 
 
 	if (find_srcdst(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel) != 0) {
@@ -178,7 +180,7 @@ int main(int argc, char **argv) {
 		return 2;
 	}
 
-	dd_s2d(sSrcDisk, sDstDisk, giSrcOffset, giDstOffset);
+	dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset);
 
 	return 0;
 }
