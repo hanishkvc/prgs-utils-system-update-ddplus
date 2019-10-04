@@ -32,34 +32,52 @@ int dummyi(int dbgLvl, ...) {
 }
 
 
+int readfile(char *sFile, char *sData, int iDataLen) {
+
+	char *sDev = NULL;
+	char *sTemp = NULL;
+	char *sStart = sFile;
+	while((sTemp=strtok(sStart, "/")) != NULL){
+		sDev = sTemp;
+		sStart = NULL;
+	}
+
+	int iF = open(sFile, O_RDONLY);
+	if (iF == -1) {
+		fprintf(stderr, "ERRR:readf:%s: Not found???\n", sDev);
+		return -1;
+	}
+	fprintf(stderr, "DBUG:readf:%s: Opened\n", sDev);
+
+	int iRead = read(iF, sData, iDataLen);
+	if (iRead == -1) {
+		fprintf(stderr, "ERRR:readf:%s:Read!\n", sDev);
+	} else {
+		sData[iRead] = 0;
+	}
+	close(iF);
+	return iRead;
+}
+
+
 int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
 	char sData[TEMP_BUFLEN];
-	int iRet = -1;
 
 	snprintf(sPath, PATH_LEN, "%s/%s/%s", FINDDISK_BASE, sDev, FINDDISK_FILE);
-	int iF = open(sPath, O_RDONLY);
-	if (iF == -1) {
-		fprintf(stderr, "ERRR:FD_FM:%s: Not found???\n", sDev);
+
+	if (readfile(sPath, sData, TEMP_BUFLEN) <= 0) {
+		fprintf(stderr, "ERRR:FD_FM:%s:Read failed\n", sDev);
 		return -1;
 	}
-	//fprintf(stderr, "DBUG:FD_FM:%s: Opened\n", sPath);
 
-	int iRead = read(iF, sData, TEMP_BUFLEN);
-	if (iRead == -1) {
-		fprintf(stderr, "ERRR:FD_FM:%s:Read!\n", sDev);
-		goto cleanup;
-	}
-	sData[iRead] = 0;
 	if (strncasecmp(sData, sCheck, strlen(sCheck)) == 0) {
 		dprintf(50, stderr, "DBUG_INFO:FD_FM:%s:%s:Found\n", sDev, sCheck);
-		iRet = 0;
+		return 0;
 	} else {
 		dprintf(50, stderr, "DBUG_WARN:FD_FM:%s:%s:NotFound\n", sDev, sCheck);
 	}
-cleanup:
-	close(iF);
-	return iRet;
+	return -2;
 }
 
 
