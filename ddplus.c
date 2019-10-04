@@ -32,26 +32,18 @@ int dummyi(int dbgLvl, ...) {
 }
 
 
-int readfile(char *sFile, char *sData, int iDataLen) {
+int _readfile(char *sFilePath, char *sData, int iDataLen, char *sFile) {
 
-	char *sDev = NULL;
-	char *sTemp = NULL;
-	char *sStart = sFile;
-	while((sTemp=strtok(sStart, "/")) != NULL){
-		sDev = sTemp;
-		sStart = NULL;
-	}
-
-	int iF = open(sFile, O_RDONLY);
+	int iF = open(sFilePath, O_RDONLY);
 	if (iF == -1) {
-		fprintf(stderr, "ERRR:readf:%s: Not found???\n", sDev);
+		fprintf(stderr, "ERRR:readf:%s: Not found???\n", sFile);
 		return -1;
 	}
-	fprintf(stderr, "DBUG:readf:%s: Opened\n", sDev);
+	dprintf(50, stderr, "DBUG:readf:%s: Opened\n", sFile);
 
 	int iRead = read(iF, sData, iDataLen);
 	if (iRead == -1) {
-		fprintf(stderr, "ERRR:readf:%s:Read!\n", sDev);
+		fprintf(stderr, "ERRR:readf:%s:Read!\n", sFile);
 	} else {
 		sData[iRead] = 0;
 	}
@@ -59,6 +51,9 @@ int readfile(char *sFile, char *sData, int iDataLen) {
 	return iRead;
 }
 
+int readfile(char *sFile, char *sData, int iDataLen) {
+	return _readfile(sFile, sData, iDataLen, sFile);
+}
 
 int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
