@@ -22,6 +22,12 @@ char *gsSrcModel, *gsDstModel;
 typedef char AOFSTR[MAX_STRINGS][STRING_LEN];
 
 
+#define dprintf dummyi
+int dummyi(int dbgLvl, ...) {
+	return 0;
+}
+
+
 int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
 	char sData[TEMP_BUFLEN];
@@ -42,10 +48,10 @@ int finddisk_frommodel(char *sDev, char *sCheck) {
 	}
 	sData[iRead] = 0;
 	if (strncasecmp(sData, sCheck, strlen(sCheck)) == 0) {
-		fprintf(stderr, "INFO:FD_FM:%s:%s:Found\n", sDev, sCheck);
+		dprintf(50, stderr, "DBUG_INFO:FD_FM:%s:%s:Found\n", sDev, sCheck);
 		iRet = 0;
 	} else {
-		fprintf(stderr, "WARN:FD_FM:%s:%s:NotFound\n", sDev, sCheck);
+		dprintf(50, stderr, "DBUG_WARN:FD_FM:%s:%s:NotFound\n", sDev, sCheck);
 	}
 cleanup:
 	close(iF);
@@ -67,7 +73,7 @@ int list_dir(char *sDirPath, char *sPrefix, AOFSTR saFiles) {
 		if (strncmp(de->d_name, sPrefix, strlen(sPrefix)) != 0)
 			continue;
 		strncpy(saFiles[iCur], de->d_name, STRING_LEN);
-		fprintf(stderr, "DBUG:ld:%s\n", saFiles[iCur]);
+		dprintf(50, stderr, "DBUG_INFO:ld:%s\n", saFiles[iCur]);
 		iCur++;
 	}
 	closedir(rDir);
