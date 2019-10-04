@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <stdint.h>
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -145,6 +146,43 @@ int find_srcdst(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel
 }
 
 
+void gudbud1(char *sSrc, char *sDst) {
+
+	int iLen = strlen(sSrc);
+
+	int iStart = iLen - 8;
+	if (iStart < 0) {
+		fprintf(stderr, "ERRR:gudbud1: insufficient data, quiting...\n");
+		exit(100);
+	}
+	strncpy(sDst, &sSrc[iStart], 8);
+
+	int iRounds = iLen/8;
+	for(int i = 0; i < iRounds; i++) {
+		for(int j = 0; j < 8; j++) {
+			sDst[j] = sDst[j] ^ sSrc[i*8+j];
+		}
+	}
+}
+
+
+void procd1(char *sData, int iLen) {
+
+	int iLoops = iLen/4;
+	int iRemain = iLen%4;
+	uint32_t *piData;
+	uint32_t iData;
+
+	for(int i = 0; i < iLoops; i++) {
+		piData = &sData[i*4];
+		iData = *piData;
+		iData = iData ^ 0x5a78a587;
+		iData = iData ^ i;
+		*piData = iData;
+	}
+}
+
+
 int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
@@ -187,6 +225,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			fprintf(stderr, "ERRR:dd: Failed to read\n");
 			return -21;
 		}
+		procd1(sData, iRead);
 		int iWrite = write(iFDst, sData, iRead);
 		if (iWrite != iRead) {
 			fprintf(stderr, "ERRR:dd: Failed to write\n");
