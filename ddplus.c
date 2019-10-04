@@ -25,13 +25,15 @@ int finddisk_frommodel(char *sDev, char *sCheck) {
 		fprintf(stderr, "ERRR:FD_FM:%s: Not found???\n", sDev);
 		return -1;
 	}
+	//fprintf(stderr, "DBUG:FD_FM:%s: Opened\n", sPath);
+
 	int iRead = read(iF, sData, TEMP_BUFLEN);
 	if (iRead == -1) {
 		fprintf(stderr, "ERRR:FD_FM:%s:Read!\n", sDev);
 		goto cleanup;
 	}
 	sData[iRead] = 0;
-	if (strncasecmp(sData, sCheck, strlen(sCheck)) >= 0) {
+	if (strncasecmp(sData, sCheck, strlen(sCheck)) == 0) {
 		fprintf(stderr, "INFO:FD_FM:%s:%s:Found\n", sDev, sCheck);
 		iRet = 0;
 	} else {
