@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <strings.h>
 #include <string.h>
+#include <dirent.h>
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -13,6 +14,7 @@
 #define FINDDISK_FILE "device/model"
 
 char *gsSrcModel, *gsDstModel;
+
 
 int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
@@ -45,6 +47,22 @@ cleanup:
 }
 
 
+int list_dir(char *sDirPath, char *sPrefix) {
+	DIR *rDir = opendir(sDirPath);
+	if (rDir == NULL) {
+		fprintf(stderr, "ERRR:ld:%s:dirpath?\n", sDirPath);
+		return -1;
+	}
+	while(1) {
+		struct dirent *de = readdir(rDir);
+		if (de == NULL)
+			break;
+		fprintf(stderr, "DBUG:ld:%s\n", de->d_name);
+	}
+	closedir(rDir);
+}
+
+
 int main(int argc, char **argv) {
 
 	if (argc < 3) {
@@ -58,5 +76,8 @@ int main(int argc, char **argv) {
 	finddisk_frommodel("sda", gsDstModel);
 	finddisk_frommodel("sdb", gsDstModel);
 
+	list_dir("/sys/block", "sd");
+
 	return 0;
 }
+
