@@ -168,15 +168,19 @@ void gudbud1(char *sSrc, char *sDst) {
 
 void procd1(char *sData, int iLen) {
 
-	int iLoops = iLen/4;
-	int iRemain = iLen%4;
-	uint32_t *piData;
-	uint32_t iData;
+	int iLoops = iLen/8;
+	int iRemain = iLen%8;
+	uint64_t *piData;
+	uint64_t iData;
 
+	if (iRemain != 0) {
+		dprintf(10, stderr, "ERRR:procd1: data not 64bit mult, quiting...\n");
+		exit(101);
+	}
 	for(int i = 0; i < iLoops; i++) {
-		piData = &sData[i*4];
+		piData = &sData[i*8];
 		iData = *piData;
-		iData = iData ^ 0x5a78a587;
+		iData = iData ^ 0x5a78a58735c9ca36;
 		iData = iData ^ i;
 		*piData = iData;
 	}
