@@ -224,6 +224,22 @@ int readex(int iF, char *sData, int iLen) {
 }
 
 
+int writeex(int iF, char *sData, int iLen) {
+	int iWrote, iRemaining;
+
+	iRemaining = iLen;
+	while(iRemaining > 0) {
+		iWrote = write(iF, &sData[iLen-iRemaining], iRemaining);
+		if (iWrote == -1) { // May handle EINTR, later if it occurs beyond once in a blue moon
+			fprintf(stderr, "WARN:theWrite:%s\n", strerror(errno));
+			return (iLen-iRemaining);
+		}
+		iRemaining -= iWrote;
+	}
+	return iLen;
+}
+
+
 int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
@@ -267,9 +283,9 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			return -21;
 		}
 		procd1(sData, iRead);
-		int iWrite = write(iFDst, sData, iRead);
+		int iWrite = writeex(iFDst, sData, iRead);
 		if (iWrite != iRead) {
-			fprintf(stderr, "ERRR:du: Failed with write;[%s]\n",strerror(errno));
+			fprintf(stderr, "ERRR:du: Failed with write\n");
 			return -22;
 		}
 		iTransferSize -= iLen;
