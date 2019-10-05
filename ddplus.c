@@ -187,8 +187,9 @@ int find_srcdstkey(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstMo
 }
 
 
-// shorten style/type 1
-void gudbud1(char *sSrc, int iSrcLen, char *s8Dst) {
+// e1: corresponds to logics which use 64bits i.e 8 bytes as core data size
+// shorten to 8bytes logic; style/type1 - a simple mechanism to do the same
+void gudbud1_e1(char *sSrc, int iSrcLen, char *s8Dst) {
 
 	int iStart = iSrcLen - 8;
 	if (iStart < 0) {
@@ -209,7 +210,7 @@ void gudbud1(char *sSrc, int iSrcLen, char *s8Dst) {
 uint64_t gKittuulaD1 = 0;
 
 
-void procd1_devlock(char *sKeyDisk) {
+void procd1_e1_devlock(char *sKeyDisk) {
 	char sKey[512];
 	char sKeyGB[8];
 	char *pInKey;
@@ -219,7 +220,7 @@ void procd1_devlock(char *sKeyDisk) {
 		fprintf(stderr, "ERRR:pd1dl: didnt get dldata, ignoring...\n");
 		return;
 	}
-	gudbud1(sKey, iLen, sKeyGB);
+	gudbud1_e1(sKey, iLen, sKeyGB);
 	pInKey = (char*)(&gKittuulaD1);
 	for(int i = 0; i < 8; i++) {
 		pInKey[i] = pInKey[i] ^ sKeyGB[i];
@@ -227,12 +228,12 @@ void procd1_devlock(char *sKeyDisk) {
 }
 
 
-void procd1_init() {
+void procd1_e1_init() {
 	gKittuulaD1 = 0x5a78a58735c9ca36;
 }
 
 
-void procd1(char *sData, int iLen) {
+void procd1_e1(char *sData, int iLen) {
 
 	int iLoops = iLen/8;
 	int iRemain = iLen%8;
@@ -341,8 +342,8 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 	int iLen = 0x100000;
 	char sData[iLen];
 	int iProgress = 0;
-	procd1_init();
-	procd1_devlock(sKeyDisk);
+	procd1_e1_init();
+	procd1_e1_devlock(sKeyDisk);
 	while (iTransferSize > 0) {
 		if ((iProgress % 1024) == 0) {
 			fprintf(stderr, "INFO:du: Remaining [%lld]...\n", iTransferSize);
@@ -354,7 +355,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			fprintf(stderr, "ERRR:du: Failed with read\n");
 			return -21;
 		}
-		procd1(sData, iRead);
+		procd1_e1(sData, iRead);
 		int iWrite = writeex(iFDst, sData, iRead);
 		if (iWrite != iRead) {
 			fprintf(stderr, "ERRR:du: Failed with write\n");
