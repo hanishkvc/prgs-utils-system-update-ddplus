@@ -107,7 +107,7 @@ int list_dir(char *sDirPath, char *sPrefix, AOFSTR saFiles) {
 }
 
 
-int find_srcdst(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel) {
+int find_srcdstkey(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel, char *sKeyDisk, char *sKeyModel) {
 
 	AOFSTR saFiles;
 	int iFiles = list_dir("/sys/block", "sd", saFiles);
@@ -148,6 +148,23 @@ int find_srcdst(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstModel
 	} else {
 		fprintf(stderr, "ERRR:ddplus:find_sd:NO Dest\n");
 		return -2;
+	}
+
+	// Find Key Disk
+	bool bKeyDisk = false;
+	for(int i = 0; i < iFiles; i++) {
+		if (finddisk_frommodel(saFiles[i], sKeyModel) < 0) {
+			continue;
+		}
+		strncpy(sKeyDisk, saFiles[i], STRING_LEN);
+		bKeyDisk = true;
+		break;
+	}
+	if (bKeyDisk) {
+		fprintf(stderr, "INFO:ddplus:find_sd:Key[%s]\n", sKeyDisk);
+	} else {
+		fprintf(stderr, "ERRR:ddplus:find_sd:NO Key\n");
+		return -3;
 	}
 
 	return 0;
@@ -341,7 +358,7 @@ int main(int argc, char **argv) {
 	gsKeyModel = argv[7];
 
 
-	if (find_srcdst(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel) != 0) {
+	if (find_srcdstkey(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel, sKeyDisk, gsKeyModel) != 0) {
 		fprintf(stderr,"ERRR:ddplus: Failed to find Source or Dest Disk, quiting...\n");
 		return 2;
 	}
