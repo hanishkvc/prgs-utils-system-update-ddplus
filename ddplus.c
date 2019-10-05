@@ -1,6 +1,6 @@
 /*
  * Update Systems Simbly, Linux based
- * v20191005IST1119, HanishKVC
+ * v20191005IST1216, HanishKVC
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191005IST1149"
+#define PRG_VERSION "v20191005IST1216"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -223,6 +223,9 @@ int readex(int iF, char *sData, int iLen) {
 			return (iLen-iRemaining);
 		}
 		iRemaining -= iRead;
+		if (iRemaining > 0) {
+			fprintf(stderr, "WARN:theRead:Partial read, Will attempt recovery\n");
+		}
 	}
 	return iLen;
 }
@@ -239,6 +242,9 @@ int writeex(int iF, char *sData, int iLen) {
 			return (iLen-iRemaining);
 		}
 		iRemaining -= iWrote;
+		if (iRemaining > 0) {
+			fprintf(stderr, "WARN:theWrite:Partial write, Will attempt recovery\n");
+		}
 	}
 	return iLen;
 }
