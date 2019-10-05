@@ -26,6 +26,7 @@
 
 char *gsDevPath;
 char *gsSrcModel, *gsDstModel;
+char *gsKeyModel;
 long long int giSrcOffset, giDstOffset, giTransSize;
 
 #define MAX_STRINGS 128
@@ -324,10 +325,11 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 int main(int argc, char **argv) {
 
 	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
+	char sKeyDisk[STRING_LEN];
 
 	fprintf(stderr, "INFO:ddplus %s\n", PRG_VERSION);
-	if (argc < 7) {
-		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize>\n");
+	if (argc < 8) {
+		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel>\n");
 		return 1;
 	}
 	gsDevPath = argv[1];
@@ -336,6 +338,7 @@ int main(int argc, char **argv) {
 	giSrcOffset = strtoll(argv[4], NULL, 0);
 	giDstOffset = strtoll(argv[5], NULL, 0);
 	giTransSize = strtoll(argv[6], NULL, 0);
+	gsKeyModel = argv[7];
 
 
 	if (find_srcdst(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel) != 0) {
