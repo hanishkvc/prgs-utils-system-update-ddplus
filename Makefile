@@ -31,9 +31,16 @@ testa2:
 	dd if=/dev/urandom of=/tmp/sdb bs=1KB count=1MB seek=1MB
 	cp /tmp/sdb /tmp/sdb.orig
 	touch /tmp/sda
+	echo "TESTA2:Encode..."
 	time ./ddplus /tmp ext sam 0 0 2000000000 ext
 	rm /tmp/sdb
 	touch /tmp/sdb
+	time ./ddplus /tmp sam ext 0 0 2000000000 sam
+	echo "TESTA2:md5sums should not match below"
+	md5sum /tmp/sdb /tmp/sdb.orig
+	rm /tmp/sdb
+	touch /tmp/sdb
 	time ./ddplus /tmp sam ext 0 0 2000000000 ext
-	cmp /tmp/sdb /tmp/sdb.orig
+	echo "TESTA2:md5sums should match below"
+	md5sum /tmp/sdb /tmp/sdb.orig
 
