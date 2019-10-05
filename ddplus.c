@@ -1,3 +1,7 @@
+/*
+ * Update Systems Simbly, Linux based
+ * v20191005IST1019, HanishKVC
+ */
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -10,6 +14,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdint.h>
+
+#define PRG_VERSION "v20191005IST1019"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -241,13 +247,13 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			iLen = iTransferSize;
 		int iRead = read(iFSrc, sData, iLen);
 		if (iRead != iLen) {
-			fprintf(stderr, "ERRR:dd: Failed to read\n");
+			fprintf(stderr, "ERRR:dd: Failed to read;[%s]\n",strerror(errno));
 			return -21;
 		}
 		procd1(sData, iRead);
 		int iWrite = write(iFDst, sData, iRead);
 		if (iWrite != iRead) {
-			fprintf(stderr, "ERRR:dd: Failed to write\n");
+			fprintf(stderr, "ERRR:dd: Failed to write;[%s]\n",strerror(errno));
 			return -22;
 		}
 		iTransferSize -= iLen;
@@ -262,6 +268,7 @@ int main(int argc, char **argv) {
 
 	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
 
+	fprintf(stderr, "INFO:ddplus %s\n", PRG_VERSION);
 	if (argc < 7) {
 		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize>\n");
 		return 1;

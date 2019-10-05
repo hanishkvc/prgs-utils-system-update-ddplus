@@ -1,8 +1,9 @@
 
 
 ddplus: ddplus.c
-	gcc -Wall -o ddplus ddplus.c -static
 	gcc -Wall -o ddplus ddplus.c -static -g
+	gcc -Wall -o ddplus ddplus.c -static
+	strip ddplus
 
 clean:
 	rm ddplus
