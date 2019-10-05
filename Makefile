@@ -15,15 +15,25 @@ testprep:
 test:
 	time ./ddplus /tmp ext sam 0 0 4000000000
 
-test1:
+testa1:
 	rm /tmp/sda /tmp/sdb /tmp/sdb.orig || /bin/true
 	dd if=/dev/urandom of=/tmp/sdb bs=1KB count=1 seek=2MB
-	dd if=/dev/urandom of=/tmp/sdb bs=1KB count=1MB seek=1MB
 	cp /tmp/sdb /tmp/sdb.orig
 	touch /tmp/sda
 	time ./ddplus /tmp ext sam 0 0 2000001000
 	rm /tmp/sdb
 	touch /tmp/sdb
 	time ./ddplus /tmp sam ext 0 0 2000001000
+	cmp /tmp/sdb /tmp/sdb.orig
+
+testa2:
+	rm /tmp/sda /tmp/sdb /tmp/sdb.orig || /bin/true
+	dd if=/dev/urandom of=/tmp/sdb bs=1KB count=1MB seek=1MB
+	cp /tmp/sdb /tmp/sdb.orig
+	touch /tmp/sda
+	time ./ddplus /tmp ext sam 0 0 2000000000
+	rm /tmp/sdb
+	touch /tmp/sdb
+	time ./ddplus /tmp sam ext 0 0 2000000000
 	cmp /tmp/sdb /tmp/sdb.orig
 

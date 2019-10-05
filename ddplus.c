@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191005IST1119"
+#define PRG_VERSION "v20191005IST1149"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -216,6 +216,10 @@ int readex(int iF, char *sData, int iLen) {
 		iRead = read(iF, &sData[iLen-iRemaining], iRemaining);
 		if (iRead == -1) { // May handle EINTR, later if it occurs beyond once in a blue moon
 			fprintf(stderr, "WARN:theRead:%s\n", strerror(errno));
+			return (iLen-iRemaining);
+		}
+		if (iRead == 0) {
+			fprintf(stderr, "WARN:theRead:EOF reached\n");
 			return (iLen-iRemaining);
 		}
 		iRemaining -= iRead;
