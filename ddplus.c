@@ -180,10 +180,10 @@ void procd1(char *sData, int iLen) {
 	for(int i = 0; i < iLoops; i++) {
 		piData = &sData[i*8];
 		iData = *piData;
-		int iOp = i % 4;
+		int iOp = i % 2;
 		switch (iOp) {
 			case 0:
-				iData = iData ^ (0x5a78a58735c9ca36+i);
+				iData = iData ^ ((0x5a78a58735c9ca36+i)*i);
 				break;
 			case 1:
 				iData = iData ^ (0x5a78a58735c9ca36*i);
