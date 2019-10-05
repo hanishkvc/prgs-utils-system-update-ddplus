@@ -184,7 +184,7 @@ void procd1(char *sData, int iLen) {
 		exit(101);
 	}
 	for(int i = 0; i < iLoops; i++) {
-		piData = &sData[i*8];
+		piData = (uint64_t*)(&sData[i*8]);
 		iData = *piData;
 		int iOp = i % 2;
 		switch (iOp) {
@@ -208,6 +208,22 @@ void procd1(char *sData, int iLen) {
 }
 
 
+int readex(int iF, char *sData, int iLen) {
+	int iRead, iRemaining;
+
+	iRemaining = iLen;
+	while(iRemaining > 0) {
+		iRead = read(iF, &sData[iLen-iRemaining], iRemaining);
+		if (iRead == -1) { // May handle EINTR, later if it occurs beyond once in a blue moon
+			fprintf(stderr, "WARN:theRead:%s\n", strerror(errno));
+			return (iLen-iRemaining);
+		}
+		iRemaining -= iRead;
+	}
+	return iLen;
+}
+
+
 int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
@@ -216,44 +232,44 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 
 	int iFSrc = open(sSrcPath, O_RDONLY);
 	if (iFSrc == -1) {
-		fprintf(stderr, "ERRR:dd: Failed to open Src [%s]\n", sSrcPath);
+		fprintf(stderr, "ERRR:du: Failed to open Src [%s]\n", sSrcPath);
 		return -1;
 	}
 	int iFDst = open(sDstPath, O_RDWR);
 	if (iFDst == -1) {
-		fprintf(stderr, "ERRR:dd: Failed to open Dst [%s]\n", sDstPath);
+		fprintf(stderr, "ERRR:du: Failed to open Dst [%s]\n", sDstPath);
 		return -2;
 	}
 
 	if (lseek(iFSrc, iSrcOffset, SEEK_SET) == -1) {
-		fprintf(stderr, "ERRR:dd: Failed Src [%s] seekto [%lld];[%s]\n", sSrcPath, iSrcOffset, strerror(errno));
+		fprintf(stderr, "ERRR:du: Failed Src [%s] seekto [%lld];[%s]\n", sSrcPath, iSrcOffset, strerror(errno));
 		return -11;
 	}
-	fprintf(stderr, "INFO:dd: Src [%s] seekdto [%lld]\n", sSrcPath, iSrcOffset);
+	fprintf(stderr, "INFO:du: Src [%s] seekdto [%lld]\n", sSrcPath, iSrcOffset);
 	if (lseek(iFDst, iDstOffset, SEEK_SET) == -1) {
-		fprintf(stderr, "ERRR:dd: Failed Dst [%s] seekto [%lld]\n", sDstPath, iDstOffset);
+		fprintf(stderr, "ERRR:du: Failed Dst [%s] seekto [%lld]\n", sDstPath, iDstOffset);
 		return -12;
 	}
-	fprintf(stderr, "INFO:dd: Dst [%s] seekdto [%lld]\n", sDstPath, iDstOffset);
+	fprintf(stderr, "INFO:du: Dst [%s] seekdto [%lld]\n", sDstPath, iDstOffset);
 
 	int iLen = 0x100000;
 	char sData[iLen];
 	int iProgress = 0;
 	while (iTransferSize > 0) {
 		if ((iProgress % 1024) == 0) {
-			fprintf(stderr, "INFO:dd: Remaining [%lld]...\n", iTransferSize);
+			fprintf(stderr, "INFO:du: Remaining [%lld]...\n", iTransferSize);
 		}
 		if (iLen > iTransferSize)
 			iLen = iTransferSize;
-		int iRead = read(iFSrc, sData, iLen);
+		int iRead = readex(iFSrc, sData, iLen);
 		if (iRead != iLen) {
-			fprintf(stderr, "ERRR:dd: Failed to read;[%s]\n",strerror(errno));
+			fprintf(stderr, "ERRR:du: Failed with read\n");
 			return -21;
 		}
 		procd1(sData, iRead);
 		int iWrite = write(iFDst, sData, iRead);
 		if (iWrite != iRead) {
-			fprintf(stderr, "ERRR:dd: Failed to write;[%s]\n",strerror(errno));
+			fprintf(stderr, "ERRR:du: Failed with write;[%s]\n",strerror(errno));
 			return -22;
 		}
 		iTransferSize -= iLen;
