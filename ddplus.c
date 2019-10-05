@@ -22,7 +22,7 @@
 
 #define SYSBLOCK_BASE "/sys/block"
 #define FINDDISK_MODELFILE "device/model"
-#define DEVLOCK_WWID "device/wwid"
+#define GET_WWIDFILE "device/wwid"
 
 char *gsDevPath;
 char *gsSrcModel, *gsDstModel;
@@ -60,9 +60,25 @@ int _readfile(char *sFilePath, char *sData, int iDataLen, char *sFile) {
 	return iRead;
 }
 
+
 int readfile(char *sFile, char *sData, int iDataLen) {
 	return _readfile(sFile, sData, iDataLen, sFile);
 }
+
+
+int get_wwid(char *sDev, char *sWWID, int iLen) {
+	char sPath[PATH_LEN];
+	int iRead;
+
+	snprintf(sPath, PATH_LEN, "%s/%s/%s", SYSBLOCK_BASE, sDev, GET_WWIDFILE);
+
+	if ((iRead = readfile(sPath, sWWID, iLen)) <= 0) {
+		fprintf(stderr, "ERRR:get_di:%s:Read failed\n", sDev);
+		return -1;
+	}
+	return iRead;
+}
+
 
 int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
@@ -171,21 +187,20 @@ int find_srcdstkey(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstMo
 }
 
 
-void gudbud1(char *sSrc, char *sDst) {
+// shorten style/type 1
+void gudbud1(char *sSrc, int iSrcLen, char *s8Dst) {
 
-	int iLen = strlen(sSrc);
-
-	int iStart = iLen - 8;
+	int iStart = iSrcLen - 8;
 	if (iStart < 0) {
 		fprintf(stderr, "ERRR:gudbud1: insufficient data, quiting...\n");
 		exit(100);
 	}
-	strncpy(sDst, &sSrc[iStart], 8);
+	strncpy(s8Dst, &sSrc[iStart], 8);
 
-	int iRounds = iLen/8;
+	int iRounds = iSrcLen/8;
 	for(int i = 0; i < iRounds; i++) {
 		for(int j = 0; j < 8; j++) {
-			sDst[j] = sDst[j] ^ sSrc[i*8+j];
+			s8Dst[j] = s8Dst[j] ^ sSrc[i*8+j];
 		}
 	}
 }
@@ -194,8 +209,21 @@ void gudbud1(char *sSrc, char *sDst) {
 uint64_t gKittuulaD1 = 0;
 
 
-void procd1_devlock() {
+void procd1_devlock(char *sKeyDisk) {
+	char sKey[512];
+	char sKeyGB[8];
+	char *pInKey;
 
+	int iLen = get_wwid(sKeyDisk, sKey, 512);
+	if (iLen <= 0) {
+		fprintf(stderr, "ERRR:pd1dl: didnt get dldata, ignoring...\n");
+		return;
+	}
+	gudbud1(sKey, iLen, sKeyGB);
+	pInKey = (char*)(&gKittuulaD1);
+	for(int i = 0; i < 8; i++) {
+		pInKey[i] = pInKey[i] ^ sKeyGB[i];
+	}
 }
 
 
