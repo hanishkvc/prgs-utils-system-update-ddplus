@@ -310,7 +310,7 @@ int writeex(int iF, char *sData, int iLen) {
 }
 
 
-int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize) {
+int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize, char *sKeyDisk) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
 	snprintf(sSrcPath, PATH_LEN, "%s/%s", sDevPath, sSrcDisk);
@@ -342,6 +342,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 	char sData[iLen];
 	int iProgress = 0;
 	procd1_init();
+	procd1_devlock(sKeyDisk);
 	while (iTransferSize > 0) {
 		if ((iProgress % 1024) == 0) {
 			fprintf(stderr, "INFO:du: Remaining [%lld]...\n", iTransferSize);
@@ -391,7 +392,7 @@ int main(int argc, char **argv) {
 		return 2;
 	}
 
-	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize) != 0) {
+	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize, sKeyDisk) != 0) {
 		fprintf(stderr,"ERRR:ddplus: Failed to update, quiting...\n");
 		return 3;
 	} else {
