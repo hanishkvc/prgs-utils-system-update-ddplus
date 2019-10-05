@@ -180,8 +180,23 @@ void procd1(char *sData, int iLen) {
 	for(int i = 0; i < iLoops; i++) {
 		piData = &sData[i*8];
 		iData = *piData;
-		iData = iData ^ 0x5a78a58735c9ca36;
-		iData = iData ^ i;
+		int iOp = i % 4;
+		switch (iOp) {
+			case 0:
+				iData = iData ^ (0x5a78a58735c9ca36+i);
+				break;
+			case 1:
+				iData = iData ^ (0x5a78a58735c9ca36*i);
+				break;
+			case 2:
+				iData = iData ^ (0x5a78a58735c9ca36-i);
+				break;
+			case 3:
+				iData = iData ^ (0x5a78a58735c9ca36<<1);
+				break;
+
+		}
+		//iData = iData ^ i;
 		*piData = iData;
 	}
 }
