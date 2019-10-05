@@ -20,8 +20,9 @@
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
 
-#define FINDDISK_BASE "/sys/block"
-#define FINDDISK_FILE "device/model"
+#define SYSBLOCK_BASE "/sys/block"
+#define FINDDISK_MODELFILE "device/model"
+#define DEVLOCK_WWID "device/wwid"
 
 char *gsDevPath;
 char *gsSrcModel, *gsDstModel;
@@ -66,7 +67,7 @@ int finddisk_frommodel(char *sDev, char *sCheck) {
 	char sPath[PATH_LEN];
 	char sData[TEMP_BUFLEN];
 
-	snprintf(sPath, PATH_LEN, "%s/%s/%s", FINDDISK_BASE, sDev, FINDDISK_FILE);
+	snprintf(sPath, PATH_LEN, "%s/%s/%s", SYSBLOCK_BASE, sDev, FINDDISK_MODELFILE);
 
 	if (readfile(sPath, sData, TEMP_BUFLEN) <= 0) {
 		fprintf(stderr, "ERRR:FD_FM:%s:Read failed\n", sDev);
@@ -172,6 +173,19 @@ void gudbud1(char *sSrc, char *sDst) {
 }
 
 
+uint64_t gKittuulaD1 = 0;
+
+
+void procd1_devlock() {
+
+}
+
+
+void procd1_init() {
+	gKittuulaD1 = 0x5a78a58735c9ca36;
+}
+
+
 void procd1(char *sData, int iLen) {
 
 	int iLoops = iLen/8;
@@ -189,16 +203,16 @@ void procd1(char *sData, int iLen) {
 		int iOp = i % 2;
 		switch (iOp) {
 			case 0:
-				iData = iData ^ ((0x5a78a58735c9ca36+i)*i);
+				iData = iData ^ ((gKittuulaD1+i)*i);
 				break;
 			case 1:
-				iData = iData ^ (0x5a78a58735c9ca36*i);
+				iData = iData ^ (gKittuulaD1*i);
 				break;
 			case 2:
-				iData = iData ^ (0x5a78a58735c9ca36-i);
+				iData = iData ^ (gKittuulaD1-i);
 				break;
 			case 3:
-				iData = iData ^ (0x5a78a58735c9ca36<<1);
+				iData = iData ^ (gKittuulaD1<<1);
 				break;
 
 		}
@@ -281,6 +295,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 	int iLen = 0x100000;
 	char sData[iLen];
 	int iProgress = 0;
+	procd1_init();
 	while (iTransferSize > 0) {
 		if ((iProgress % 1024) == 0) {
 			fprintf(stderr, "INFO:du: Remaining [%lld]...\n", iTransferSize);
