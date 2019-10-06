@@ -210,18 +210,18 @@ void gudbud1_e1(char *sSrc, int iSrcLen, char *s8Dst) {
 uint64_t gKittuulaD1 = 0;
 
 
-void procd1_e1_devlock(char *sKeyDisk) {
+void devlock_e1_wwid(char *sKeyDisk, uint64_t *opOnData) {
 	char sKey[512];
 	char sKeyGB[8];
 	char *pInKey;
 
 	int iLen = get_wwid(sKeyDisk, sKey, 512);
 	if (iLen <= 0) {
-		fprintf(stderr, "ERRR:pd1dl: didnt get dldata, ignoring...\n");
+		fprintf(stderr, "ERRR:dle1t1: didnt get dldata, ignoring...\n");
 		return;
 	}
 	gudbud1_e1(sKey, iLen, sKeyGB);
-	pInKey = (char*)(&gKittuulaD1);
+	pInKey = (char*)opOnData;
 	for(int i = 0; i < 8; i++) {
 		pInKey[i] = pInKey[i] ^ sKeyGB[i];
 	}
@@ -342,8 +342,10 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 	int iLen = 0x100000;
 	char sData[iLen];
 	int iProgress = 0;
+#ifdef PROCD1
 	procd1_e1_init();
-	procd1_e1_devlock(sKeyDisk);
+	devlock_e1_wwid(sKeyDisk, &gKittuulaD1);
+#endif
 	while (iTransferSize > 0) {
 		if ((iProgress % 1024) == 0) {
 			fprintf(stderr, "INFO:du: Remaining [%lld]...\n", iTransferSize);
@@ -355,7 +357,9 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			fprintf(stderr, "ERRR:du: Failed with read\n");
 			return -21;
 		}
+#ifdef PROCD1
 		procd1_e1(sData, iRead);
+#endif
 		int iWrite = writeex(iFDst, sData, iRead);
 		if (iWrite != iRead) {
 			fprintf(stderr, "ERRR:du: Failed with write\n");

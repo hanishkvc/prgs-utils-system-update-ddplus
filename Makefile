@@ -1,12 +1,12 @@
 
 
 ddplus: ddplus.c
-	gcc -Wall -o ddplus ddplus.c -static -g
-	gcc -Wall -o ddplus ddplus.c -static
+	gcc -Wall -o ddplus.generic ddplus.c -static -g
+	gcc -Wall -o ddplus ddplus.c -static -D PROCD1
 	strip ddplus
 
 clean:
-	rm ddplus
+	rm ddplus ddplus.generic || /bin/true
 
 testprep:
 	dd if=/dev/urandom of=/tmp/sdb bs=1K count=1 seek=5M
