@@ -1,5 +1,5 @@
 /*
- * Update Systems Simbly, Linux based
+ * Update Systems Simbly, Linux based - with some minimal protection against (unauthorised) update disk duplication efforts.
  * v20191006IST1141, HanishKVC
  */
 #include <stdio.h>
