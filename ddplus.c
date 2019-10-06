@@ -1,6 +1,6 @@
 /*
  * Update Systems Simbly, Linux based - with some minimal protection against (unauthorised) update disk duplication efforts.
- * v20191006IST1141, HanishKVC
+ * v20191006IST1921, HanishKVC
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191006IST1901"
+#define PRG_VERSION "v20191006IST1921"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -434,6 +434,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 }
 
 
+#define SAFE_ARGS 1
 int main(int argc, char **argv) {
 
 	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
@@ -458,6 +459,10 @@ int main(int argc, char **argv) {
 	gsKeyModel = argv[7];
 	iDlType = strtol(argv[8], NULL, 0);
 	int iNBMod = strtol(argv[9], NULL, 0);
+#ifdef SAFE_ARGS
+	giSrcOffset = giSrcOffset - 0x5a5a5a5a;
+	giDstOffset = giDstOffset - 0xa5a5a5a5;
+#endif
 
 
 	if (find_srcdstkey(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel, sKeyDisk, gsKeyModel) != 0) {
