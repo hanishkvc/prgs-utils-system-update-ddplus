@@ -1,6 +1,6 @@
 /*
  * Update Systems Simbly, Linux based
- * v20191006IST1130, HanishKVC
+ * v20191006IST1141, HanishKVC
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191006IST1130"
+#define PRG_VERSION "v20191006IST1141"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -261,8 +261,8 @@ void procd1_e1_init() {
 }
 
 
-void procd1_e1_next() {
-	gKittuulaD1 = gKittuulaD1 * 0xa5;
+void procd1_e1_next(int nbMod) {
+	gKittuulaD1 = gKittuulaD1 * nbMod;
 }
 
 
@@ -344,7 +344,7 @@ int writeex(int iF, char *sData, int iLen) {
 }
 
 
-int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize, char *sKeyDisk, int dlType) {
+int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize, char *sKeyDisk, int dlType, int nbMod) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
 	snprintf(sSrcPath, PATH_LEN, "%s/%s", sDevPath, sSrcDisk);
@@ -391,7 +391,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			return -21;
 		}
 #ifdef PROCD1
-		procd1_e1_next();
+		procd1_e1_next(nbMod);
 		procd1_e1(sData, iRead);
 #endif
 		int iWrite = writeex(iFDst, sData, iRead);
@@ -414,8 +414,8 @@ int main(int argc, char **argv) {
 	int iDlType;
 
 	fprintf(stderr, "INFO:ddplus %s\n", PRG_VERSION);
-	if (argc < 9) {
-		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel> <dlType>\n");
+	if (argc < 10) {
+		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel> <dlType> <nbMod>\n");
 		return 1;
 	}
 	gsDevPath = argv[1];
@@ -426,6 +426,7 @@ int main(int argc, char **argv) {
 	giTransSize = strtoll(argv[6], NULL, 0);
 	gsKeyModel = argv[7];
 	iDlType = strtol(argv[8], NULL, 0);
+	int iNBMod = strtol(argv[9], NULL, 0);
 
 
 	if (find_srcdstkey(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel, sKeyDisk, gsKeyModel) != 0) {
@@ -433,7 +434,7 @@ int main(int argc, char **argv) {
 		return 2;
 	}
 
-	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize, sKeyDisk, iDlType) != 0) {
+	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize, sKeyDisk, iDlType, iNBMod) != 0) {
 		fprintf(stderr,"ERRR:ddplus: Failed to update, quiting...\n");
 		return 3;
 	} else {
