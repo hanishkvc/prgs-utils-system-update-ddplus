@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191006IST1841"
+#define PRG_VERSION "v20191006IST1901"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -192,9 +192,17 @@ int find_srcdstkey(char *sSrcDisk, char *sSrcModel, char *sDstDisk, char *sDstMo
 		break;
 	}
 	if (bKeyDisk) {
+#ifdef SAFE_MSGS
+		fprintf(stderr, "INFO:ddplus:find_sd:Check[%s]\n", sKeyDisk);
+#else
 		fprintf(stderr, "INFO:ddplus:find_sd:Key[%s]\n", sKeyDisk);
+#endif
 	} else {
+#ifdef SAFE_MSGS
+		fprintf(stderr, "ERRR:ddplus:find_sd:NO Check\n");
+#else
 		fprintf(stderr, "ERRR:ddplus:find_sd:NO Key\n");
+#endif
 		return -3;
 	}
 
@@ -367,15 +375,29 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 	}
 
 	if (lseek(iFSrc, iSrcOffset, SEEK_SET) == -1) {
+#ifdef SAFE_MSGS
+		fprintf(stderr, "ERRR:du: Failed Src [%s] op2\n", sSrcPath);
+#else
 		fprintf(stderr, "ERRR:du: Failed Src [%s] seekto [%lld];[%s]\n", sSrcPath, iSrcOffset, strerror(errno));
+#endif
 		return -11;
 	}
+#ifdef SAFE_MSGS
+#else
 	fprintf(stderr, "INFO:du: Src [%s] seekdto [%lld]\n", sSrcPath, iSrcOffset);
+#endif
 	if (lseek(iFDst, iDstOffset, SEEK_SET) == -1) {
-		fprintf(stderr, "ERRR:du: Failed Dst [%s] seekto [%lld]\n", sDstPath, iDstOffset);
+#ifdef SAFE_MSGS
+		fprintf(stderr, "ERRR:du: Failed Dst [%s] op2\n", sDstPath);
+#else
+		fprintf(stderr, "ERRR:du: Failed Dst [%s] seekto [%lld];[%s]\n", sDstPath, iDstOffset, strerror(errno));
+#endif
 		return -12;
 	}
+#ifdef SAFE_MSGS
+#else
 	fprintf(stderr, "INFO:du: Dst [%s] seekdto [%lld]\n", sDstPath, iDstOffset);
+#endif
 
 	int iLen = 0x100000;
 	char sData[iLen];
@@ -420,7 +442,11 @@ int main(int argc, char **argv) {
 
 	fprintf(stderr, "INFO:ddplus %s\n", PRG_VERSION);
 	if (argc < 10) {
+#ifdef SAFE_MSGS
+		fprintf(stderr,"INFO:usage: ddplus hungry for more\n");
+#else
 		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel> <dlType> <nbMod>\n");
+#endif
 		return 1;
 	}
 	gsDevPath = argv[1];

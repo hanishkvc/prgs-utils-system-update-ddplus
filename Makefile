@@ -1,12 +1,13 @@
 
 
 ddplus: ddplus.c
-	gcc -Wall -o ddplus.generic ddplus.c -static -g
-	gcc -Wall -o ddplus ddplus.c -static -D PROCD1
-	strip ddplus
+	gcc -Wall -o ddplus.unsafe.generic ddplus.c -static -g
+	gcc -Wall -o ddplus.unsafe ddplus.c -static -D PROCD1
+	gcc -Wall -o ddplus ddplus.c -static -D PROCD1 -D SAFE_MSGS
+	strip ddplus ddplus.unsafe
 
 clean:
-	rm ddplus ddplus.generic || /bin/true
+	rm ddplus ddplus.unsafe.generic ddplus.unsafe || /bin/true
 
 testa0:
 	dd if=/dev/urandom of=/tmp/sdb bs=1K count=1 seek=5M
