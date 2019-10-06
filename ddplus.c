@@ -222,6 +222,11 @@ void gudbud1_e1(char *sSrc, int iSrcLen, char *s8Dst) {
 }
 
 
+#define DL_TYPE_BASE 0x10000001
+#define DL_TYPE_WWID 0x10001001
+#define DL_TYPE_INQ  0x10002001
+
+
 void devlock_e1(char *sKeyDisk, uint64_t *opOnData, int type) {
 	char sKey[512];
 	char sKeyGB[8];
@@ -229,6 +234,7 @@ void devlock_e1(char *sKeyDisk, uint64_t *opOnData, int type) {
 	int iLen = -1;
 
 	memset(sKey, 0, 512);
+	type = type + DL_TYPE_BASE;
 	if (type == DL_TYPE_WWID) {
 		iLen = get_wwid(sKeyDisk, sKey, 512);
 	}
@@ -333,7 +339,7 @@ int writeex(int iF, char *sData, int iLen) {
 }
 
 
-int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize, char *sKeyDisk) {
+int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOffset, long long int iDstOffset, long long int iTransferSize, char *sKeyDisk, int dlType) {
 	char sSrcPath[PATH_LEN], sDstPath[PATH_LEN];
 
 	snprintf(sSrcPath, PATH_LEN, "%s/%s", sDevPath, sSrcDisk);
@@ -366,7 +372,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 	int iProgress = 0;
 #ifdef PROCD1
 	procd1_e1_init();
-	devlock_e1_wwid(sKeyDisk, &gKittuulaD1);
+	devlock_e1(sKeyDisk, &gKittuulaD1, dlType);
 #endif
 	while (iTransferSize > 0) {
 		if ((iProgress % 1024) == 0) {
@@ -399,10 +405,11 @@ int main(int argc, char **argv) {
 
 	char sSrcDisk[STRING_LEN], sDstDisk[STRING_LEN];
 	char sKeyDisk[STRING_LEN];
+	int iDlType;
 
 	fprintf(stderr, "INFO:ddplus %s\n", PRG_VERSION);
-	if (argc < 8) {
-		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel>\n");
+	if (argc < 9) {
+		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel> <dlType>\n");
 		return 1;
 	}
 	gsDevPath = argv[1];
@@ -412,6 +419,7 @@ int main(int argc, char **argv) {
 	giDstOffset = strtoll(argv[5], NULL, 0);
 	giTransSize = strtoll(argv[6], NULL, 0);
 	gsKeyModel = argv[7];
+	iDlType = strtol(argv[8], NULL, 0);
 
 
 	if (find_srcdstkey(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel, sKeyDisk, gsKeyModel) != 0) {
@@ -419,7 +427,7 @@ int main(int argc, char **argv) {
 		return 2;
 	}
 
-	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize, sKeyDisk) != 0) {
+	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize, sKeyDisk, iDlType) != 0) {
 		fprintf(stderr,"ERRR:ddplus: Failed to update, quiting...\n");
 		return 3;
 	} else {
