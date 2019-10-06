@@ -1,6 +1,6 @@
 /*
  * Update Systems Simbly, Linux based
- * v20191005IST1650, HanishKVC
+ * v20191006IST1106, HanishKVC
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191005IST1650"
+#define PRG_VERSION "v20191006IST1106"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
