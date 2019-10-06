@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191006IST1141"
+#define PRG_VERSION "v20191006IST1841"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -281,22 +281,27 @@ void procd1_e1(char *sData, int iLen) {
 		piData = (uint64_t*)(&sData[i*8]);
 		iData = *piData;
 		int iOp = i % 2;
+#ifdef NOPROC_BEGIN
+		int j = i;
+#else
+		int j = i + 2;
+#endif
 		switch (iOp) {
 			case 0:
-				iData = iData ^ ((gKittuulaD1+i)*i);
+				iData = iData ^ ((gKittuulaD1+j)*j);
 				break;
 			case 1:
-				iData = iData ^ (gKittuulaD1*i);
+				iData = iData ^ (gKittuulaD1*j);
 				break;
 			case 2:
-				iData = iData ^ (gKittuulaD1-i);
+				iData = iData ^ (gKittuulaD1-j);
 				break;
 			case 3:
 				iData = iData ^ (gKittuulaD1<<1);
 				break;
-
+			default:
+				iData = iData ^ j;
 		}
-		//iData = iData ^ i;
 		*piData = iData;
 	}
 }
