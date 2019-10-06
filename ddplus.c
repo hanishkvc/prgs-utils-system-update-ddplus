@@ -1,6 +1,6 @@
 /*
  * Update Systems Simbly, Linux based
- * v20191006IST1106, HanishKVC
+ * v20191006IST1130, HanishKVC
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191006IST1106"
+#define PRG_VERSION "v20191006IST1130"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -261,6 +261,11 @@ void procd1_e1_init() {
 }
 
 
+void procd1_e1_next() {
+	gKittuulaD1 = gKittuulaD1 * 0xa5;
+}
+
+
 void procd1_e1(char *sData, int iLen) {
 
 	int iLoops = iLen/8;
@@ -386,6 +391,7 @@ int dd_s2d(char *sDevPath, char *sSrcDisk, char *sDstDisk, long long int iSrcOff
 			return -21;
 		}
 #ifdef PROCD1
+		procd1_e1_next();
 		procd1_e1(sData, iRead);
 #endif
 		int iWrite = writeex(iFDst, sData, iRead);
