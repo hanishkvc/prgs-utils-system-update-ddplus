@@ -23,6 +23,7 @@
 #define SYSBLOCK_BASE "/sys/block"
 #define FINDDISK_MODELFILE "device/model"
 #define GET_WWIDFILE "device/wwid"
+#define GET_INQFILE "device/inquiry"
 
 char *gsDevPath;
 char *gsSrcModel, *gsDstModel;
@@ -74,6 +75,20 @@ int get_wwid(char *sDev, char *sWWID, int iLen) {
 
 	if ((iRead = readfile(sPath, sWWID, iLen)) <= 0) {
 		fprintf(stderr, "ERRR:get_di:%s:Read failed\n", sDev);
+		return -1;
+	}
+	return iRead;
+}
+
+
+int get_inquiry(char *sDev, char *sInq, int iLen) {
+	char sPath[PATH_LEN];
+	int iRead;
+
+	snprintf(sPath, PATH_LEN, "%s/%s/%s", SYSBLOCK_BASE, sDev, GET_INQFILE);
+
+	if ((iRead = readfile(sPath, sInq, iLen)) <= 0) {
+		fprintf(stderr, "ERRR:get_in:%s:Read failed\n", sDev);
 		return -1;
 	}
 	return iRead;
@@ -207,17 +222,23 @@ void gudbud1_e1(char *sSrc, int iSrcLen, char *s8Dst) {
 }
 
 
-uint64_t gKittuulaD1 = 0;
-
-
-void devlock_e1_wwid(char *sKeyDisk, uint64_t *opOnData) {
+void devlock_e1(char *sKeyDisk, uint64_t *opOnData, int type) {
 	char sKey[512];
 	char sKeyGB[8];
 	char *pInKey;
+	int iLen = -1;
 
-	int iLen = get_wwid(sKeyDisk, sKey, 512);
+	memset(sKey, 0, 512);
+	if (type == DL_TYPE_WWID) {
+		iLen = get_wwid(sKeyDisk, sKey, 512);
+	}
+	if (type == DL_TYPE_INQ) {
+		iLen = get_inquiry(sKeyDisk, sKey, 512);
+		memmove(sKey, &sKey[8], 48);
+		iLen = 48;
+	}
 	if (iLen <= 0) {
-		fprintf(stderr, "ERRR:dle1t1: didnt get dldata, ignoring...\n");
+		fprintf(stderr, "ERRR:dle1: didnt get dldata, ignoring...\n");
 		return;
 	}
 	gudbud1_e1(sKey, iLen, sKeyGB);
@@ -228,6 +249,7 @@ void devlock_e1_wwid(char *sKeyDisk, uint64_t *opOnData) {
 }
 
 
+uint64_t gKittuulaD1 = 0;
 void procd1_e1_init() {
 	gKittuulaD1 = 0x5a78a58735c9ca36;
 }
