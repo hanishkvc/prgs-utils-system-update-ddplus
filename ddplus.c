@@ -1,6 +1,6 @@
 /*
  * Update Systems Simbly, Linux based - with some minimal protection against (unauthorised) update disk duplication efforts.
- * v20191006IST1921, HanishKVC
+ * v20191008IST1130, HanishKVC
  */
 #include <stdio.h>
 #include <sys/types.h>
@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-#define PRG_VERSION "v20191006IST1921"
+#define PRG_VERSION "v20191008IST1130"
 
 #define PATH_LEN 1024
 #define TEMP_BUFLEN 1024
@@ -265,12 +265,12 @@ void devlock_e1(char *sKeyDisk, uint64_t *opOnData, int type) {
 
 uint64_t gKittuulaD1 = 0;
 void procd1_e1_init() {
-	gKittuulaD1 = 0x5a78a58735c9ca36;
+	gKittuulaD1 = 0x5a78a58735c9ca36 + random();
 }
 
 
 void procd1_e1_next(int nbMod) {
-	gKittuulaD1 = gKittuulaD1 * nbMod;
+	gKittuulaD1 = gKittuulaD1 * nbMod + random();
 }
 
 
@@ -442,11 +442,11 @@ int main(int argc, char **argv) {
 	int iDlType;
 
 	fprintf(stderr, "INFO:ddplus %s\n", PRG_VERSION);
-	if (argc < 10) {
+	if (argc < 11) {
 #ifdef SAFE_MSGS
 		fprintf(stderr,"INFO:usage: ddplus hungry for more\n");
 #else
-		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel> <dlType> <nbMod>\n");
+		fprintf(stderr,"INFO:usage: ddplus <DevPath> <SrcModel> <DestModel> <SrcOffset> <DstOffset> <TransferSize> <KeyModel> <dlType> <nbMod> <grMod>\n");
 #endif
 		return 1;
 	}
@@ -459,17 +459,18 @@ int main(int argc, char **argv) {
 	gsKeyModel = argv[7];
 	iDlType = strtol(argv[8], NULL, 0);
 	int iNBMod = strtol(argv[9], NULL, 0);
+	unsigned int iuGRMod = strtoul(argv[10], NULL, 0);
 #ifdef SAFE_ARGS
 	giSrcOffset = giSrcOffset - 0x5a5a5a5a;
 	giDstOffset = giDstOffset - 0xa5a5a5a5;
 #endif
-
 
 	if (find_srcdstkey(sSrcDisk, gsSrcModel, sDstDisk, gsDstModel, sKeyDisk, gsKeyModel) != 0) {
 		fprintf(stderr,"ERRR:ddplus: Failed to find Source or Dest Disk, quiting...\n");
 		return 2;
 	}
 
+	srandom(iuGRMod);
 	if (dd_s2d(gsDevPath, sSrcDisk, sDstDisk, giSrcOffset, giDstOffset, giTransSize, sKeyDisk, iDlType, iNBMod) != 0) {
 		fprintf(stderr,"ERRR:ddplus: Failed to update, quiting...\n");
 		return 3;
