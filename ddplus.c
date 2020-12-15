@@ -132,6 +132,8 @@ int list_dir(char *sDirPath, char *sPrefix, AOFSTR saFiles) {
 		strncpy(saFiles[iCur], de->d_name, STRING_LEN);
 		dprintf(50, stderr, "DBUG_INFO:ld:%s\n", saFiles[iCur]);
 		iCur++;
+		if (iCur >= MAX_STRINGS)
+			break;
 	}
 	closedir(rDir);
 	return iCur;
